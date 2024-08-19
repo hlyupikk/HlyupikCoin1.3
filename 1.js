@@ -1,80 +1,39 @@
-// Получаем элементы
-const coinCountElement = document.getElementById('coin-count');
-const clickButton = document.getElementById('click-button');
-const shopItems = document.querySelectorAll('.shop-item');
+let coinCount = 0;
+let clickMultiplier = 1;
+let currentSkin = '';
 
-// Загружаем сохранённые данные из Local Storage
-let coinCount = parseInt(localStorage.getItem('coinCount')) || 0;
-let currentSkin = localStorage.getItem('currentSkin') || 'default';
-let clickMultiplier = parseFloat(localStorage.getItem('clickMultiplier')) || 1;
-
-// Устанавливаем количество монет на экране и применяем текущий скин
-coinCountElement.textContent = coinCount;
-applySkin(currentSkin);
-
-// Функция для применения выбранного скина
-function applySkin(skin) {
-    let skinUrl;
-
-    if (skin === 'default') {
-        skinUrl = 'https://www.pngall.com/wp-content/uploads/4/Empty-Gold-Coin-PNG-Image.png'; // Дефолтное изображение
-    } else if (skin === 'skin1') {
-        skinUrl = 'https://avatanplus.com/files/resources/original/58ee47571b77e15b62c6ac49.png'; // Красный фон
-    } else if (skin === 'skin2') {
-        skinUrl = 'https://i.pinimg.com/originals/a7/05/62/a7056242ebcc48c77648886ca978d12e.png'; // Зеленый фон
-    } else if (skin === 'skin3') {
-        skinUrl = 'https://obolon.ua/img/products/14942.png'; // Синий фон
-    } else {
-        console.error('Unknown skin:', skin);
-        return;
-    }
-
-    // Применяем фоновое изображение к кнопке
-    clickButton.style.backgroundImage = `url('${skinUrl}')`;
+// Функция для обновления количества Хлюпиков
+function updateCoinCount() {
+    document.getElementById('coin-count').innerText = coinCount;
 }
 
-// Обрабатываем клики по кнопке
-clickButton.addEventListener('click', () => {
+// Обработчик клика на кнопку
+document.getElementById('click-button').addEventListener('click', function() {
     coinCount += clickMultiplier;
-    coinCountElement.textContent = coinCount;
-    localStorage.setItem('coinCount', coinCount);
+    updateCoinCount();
 });
 
-// Обработка выбора магазина
-shopItems.forEach(item => {
-    item.addEventListener('click', () => {
-        const type = item.dataset.type;
-        if (type === 'skin') {
-            const skin = item.dataset.skin;
-            const price = skin === 'skin1' ? 100 : (skin === 'skin2' ? 250 : 500);
-            if (coinCount >= price) {
-                // Снимаем монеты за покупку
-                coinCount -= price;
-                coinCountElement.textContent = coinCount;
-                localStorage.setItem('coinCount', coinCount);
+// Обработчики кликов по предметам магазина
+document.querySelectorAll('.shop-item').forEach(item => {
+    item.addEventListener('click', function() {
+        const type = this.getAttribute('data-type');
+        const value = this.getAttribute('data-skin') || this.getAttribute('data-multiplier');
+        const price = parseInt(this.textContent.match(/\d+/)[0]);
 
-                // Применяем и сохраняем новый скин
-                currentSkin = skin;
-                applySkin(currentSkin);
-                localStorage.setItem('currentSkin', currentSkin);
-            } else {
-                alert('Недостаточно Хлюпиков!');
+        if (coinCount >= price) {
+            coinCount -= price;
+            if (type === 'skin') {
+                currentSkin = this.getAttribute('data-skin');
+                document.getElementById('click-button').style.backgroundImage = `url('https://via.placeholder.com/100/${currentSkin}')`;
+            } else if (type === 'upgrade') {
+                clickMultiplier = parseInt(value);
             }
-        } else if (type === 'upgrade') {
-            const multiplier = parseFloat(item.dataset.multiplier);
-            const price = multiplier === 2 ? 150 : (multiplier === 3 ? 500 : 1000);
-            if (coinCount >= price) {
-                // Снимаем монеты за покупку
-                coinCount -= price;
-                coinCountElement.textContent = coinCount;
-                localStorage.setItem('coinCount', coinCount);
-
-                // Применяем и сохраняем новый множитель
-                clickMultiplier = multiplier;
-                localStorage.setItem('clickMultiplier', clickMultiplier);
-            } else {
-                alert('Недостаточно Хлюпиков!');
-            }
+            updateCoinCount();
+        } else {
+            alert('Недостаточно Хлюпиков!');
         }
     });
 });
+
+// Установка дефолтного скина на кнопку
+document.getElementById('click-button').style.backgroundImage = "url('https://via.placeholder.com/100/FFFFFF')";
